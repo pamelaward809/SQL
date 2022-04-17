@@ -1,0 +1,140 @@
+---Using Groceries.db
+CREATE TABLE grocery_visit(date TEXT, time_spent_min INTEGER, amount_spent INTEGER);
+INSERT INTO grocery_visit VALUES("2021-12-03", 45, 34.95);
+INSERT INTO grocery_visit VALUES("2021-12-15", 135, 65.45);
+INSERT INTO grocery_visit VALUES("2021-12-23", 90, 35.62);
+
+CREATE TABLE Macys_visit(date TEXT, time_spent_min INTEGER, amount_spent INTEGER);
+INSERT INTO Macys_visit VALUES("2021-12-01", 40, 45.99);
+INSERT INTO Macys_visit VALUES("2021-12-15", 25, 37.30);
+INSERT INTO Macys_visit VALUES("2021-12-19", 20, 15.82);
+
+CREATE TABLE grocery_list(date TEXT, item_name TEXT, item_category TEXT);
+INSERT INTO grocery_list VALUES("2021-12-03", "Ground beef", "Meat and Fish");
+INSERT INTO grocery_list VALUES("2021-12-03", "Buns", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-03", "Avocado", "Fruits and Vegetables");
+INSERT INTO grocery_list VALUES("2021-12-03", "Lettuce", "Fruits and Vegetables");
+INSERT INTO grocery_list VALUES("2021-12-03", "Heirloom tomato", "Fruits and Vegetables");
+INSERT INTO grocery_list VALUES("2021-12-15", "Oats", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-15", "Beans", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-15", "Toothpaste", NULL);
+INSERT INTO grocery_list VALUES("2021-12-15", "Flour", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-15", "Yeast", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-15", "Popcorn", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-15", "Eggs", NULL);
+INSERT INTO grocery_list VALUES("2021-12-15", "Milk", "Dairy");
+INSERT INTO grocery_list VALUES("2021-12-15", "Lettuce", "Fruits and Vegetables");
+INSERT INTO grocery_list VALUES("2021-12-15", "Garden Burger", NULL);
+INSERT INTO grocery_list VALUES("2021-12-23", "Mayonnaise", "Dairy");
+INSERT INTO grocery_list VALUES("2021-12-23", "Flour", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-23", "Milk", "Dairy");
+INSERT INTO grocery_list VALUES("2021-12-23", "Chicken", "Meat and Fish");
+INSERT INTO grocery_list VALUES("2021-12-23", "Granola", "Bulk");
+INSERT INTO grocery_list VALUES("2021-12-23", "Yogurt", "Dairy");
+INSERT INTO grocery_list VALUES("2021-12-23", "Sparkling Water", NULL);
+INSERT INTO grocery_list VALUES("2021-12-23", "Onions", "Fruits and Vegetables");
+
+--To see everything in each table
+
+SELECT * FROM grocery_visit;
+
+SELECT * FROM Macys_visit;
+
+SELECT * FROM grocery_list;
+
+--To see the date and amount spent for each visit
+
+SELECT date, amount_spent FROM grocery_visit;
+
+--To see the first 10 items on the grocery list
+SELECT * FROM grocery_list LIMIT 10;
+
+--To see everything purchased in a month and date purchased
+SELECT * FROM grocery_list
+ORDER BY date DESC;
+
+--To see which items on the list are not assigned to a category
+SELECT * FROM grocery_list
+WHERE item_category IS NULL;
+
+--To see all the items purchased in alphabetical order by name
+SELECT DISTINCT item_name
+FROM grocery_list
+ORDER BY item_name ASC;
+
+--To see all the items purchased under the category Fruits and Vegetables in alphabetical order by name
+SELECT * FROM grocery_list
+WHERE item_category = 'Fruits and Vegetables'
+ORDER BY item_name ASC;
+
+--To see all the items under the categories that include Meat listed in alpha order by name
+SELECT * FROM grocery_list
+WHERE item_category LIKE 'Meat%'
+ORDER BY item_name ASC;
+
+--To find all the days avocado and milk were purchased
+SELECT * FROM grocery_list
+WHERE item_name IN ('Avocado', 'Milk');
+--To see all grocery visits in a specific range of dates
+SELECT * FROM grocery_visit
+WHERE date >= '2021-12-01'
+AND date <= '2021-12-15';
+
+--To summarize all visits to the grocery store: number of visits, the shortest and longest visit, the average time spent in all the visits 
+SELECT COUNT(*) AS total_visits
+, MIN(time_spent_min) AS shortest_visit
+, AVG(time_spent_min) AS average_visit
+, MAX(time_spent_min) AS longest_visit
+FROM grocery_visit;
+
+--To see how much money spent at the grocery store from lowest to highest
+SELECT * FROM grocery_visit
+ORDER BY amount_spent;
+
+--To see all the grocery store visits by date, starting with most recent
+SELECT date FROM grocery_visit
+ORDER BY date DESC;
+
+--To see when more than $15 was spent at either the grocery store or department store
+SELECT * FROM grocery_visit
+JOIN Macys_visit
+WHERE grocery_visit.amount_spent > 15
+AND Macys_visit.amount_spent > 15;
+
+--OR
+SELECT date, amount_spent FROM grocery_visit
+WHERE amount_spent > 15
+UNION
+SELECT date, amount_spent FROM Macys_visit
+WHERE amount_spent > 15;
+
+--To see how much was spent on the days I purchased items for hamburgers
+SELECT * FROM grocery_visit
+INNER JOIN grocery_list
+ON grocery_visit.date = grocery_list.date
+WHERE grocery_list.item_name IN ('Ground beef', 'Buns', 'Heirloom tomato', 'Lettuce', 'Onion');
+
+--To find the average amount spend on the grocery visits where I purchased items for hamburgers
+SELECT AVG(DISTINCT amount_spent) AS avg_amount_spent
+FROM grocery_visit
+INNER JOIN grocery_list
+ON grocery_visit.date = grocery_list.date
+WHERE grocery_list.item_name IN ('Ground beef', 'Buns', 'Heirloom tomato', 'Lettuce', 'Onion');
+--OR
+SELECT AVG(amount_spent) AS avg_amount_spent
+FROM
+(
+SELECT DISTINCT grocery_visit.date, amount_spent
+FROM grocery_visit
+INNER JOIN grocery_list
+ON grocery_visit.date = grocery_list.date
+WHERE grocery_list.item_name IN ('Ground beef', 'Buns', 'Heirloom tomato', 'Lettuce', 'Onion')
+);
+
+--To see if days I went to the grocery store, I also visited Macys. If visited on the same day, how much time did I spend at each?
+SELECT grocery_visit.*
+, Macys_visit.time_spent_min AS time_spent_Macys
+, Macys_visit.amount_spent AS amount_spent_Macys
+FROM grocery_visit
+LEFT JOIN Macys_visit
+ON grocery_visit.date = Macys_visit.date;
